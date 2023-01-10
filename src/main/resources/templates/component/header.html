@@ -1,0 +1,15 @@
+<div th:fragment="header">
+    <nav class="navbar navbar-expand navbar-dark bg-dark d-flex justify-content-between sticky-top">
+        <div class="container-fluid g-0 px-3">
+        <div class="nav-item text-light fs-4">
+            <span class="fw-bolder"  sec:authentication="name"></span>
+            <span> with roles: </span>
+            <span  th:each="authority : ${#authentication.getAuthorities()}"
+                   th:if="${authority.getAuthority().startsWith('ROLE_')}"
+                   th:text="${authority.getAuthority().replaceFirst('ROLE_', ' ')}">
+            </span>
+        </div>
+        <a class="nav-link text-white-50" th:href="@{/logout}">logout</a>
+        </div>
+    </nav>
+</div>
