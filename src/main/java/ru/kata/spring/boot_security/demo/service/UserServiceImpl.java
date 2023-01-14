@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.kata.spring.boot_security.demo.dao.RoleDao;
@@ -19,12 +20,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserDao userDao;
     private final RoleDao roleDao;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserServiceImpl(UserDao userDao, RoleDao roleDao) {
+    public UserServiceImpl(UserDao userDao, RoleDao roleDao, BCryptPasswordEncoder passwordEncoder) {
         this.userDao = userDao;
         this.roleDao = roleDao;
-
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -34,9 +36,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public void addUser(User user) {
-
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(user.getRoles().stream().map(role -> roleDao.getRoleByName(role.getName())).collect(Collectors.toSet()));
-        System.out.println(user.getRoles());
         userDao.add(user);
 
     }
@@ -48,8 +49,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public void changeUser(User user) {
+        if(!user.getPassword().equals(userDao.getUserById(user.getId()).getPassword())) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         user.setRoles(user.getRoles().stream().map(role -> roleDao.getRoleByName(role.getName())).collect(Collectors.toSet()));
-        System.out.println(user.getRoles());
         userDao.changeUser(user);
     }
 

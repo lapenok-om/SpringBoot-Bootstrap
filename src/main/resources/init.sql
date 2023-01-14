@@ -6,6 +6,10 @@ create table users.role
 
 insert into users.role (id, name) values (1, 'ROLE_USER'), (2, 'ROLE_ADMIN');
 
+drop table users.user_role;
+drop table users.role;
+drop table users.users;
+
 create table users.users
 (
     id bigint NOT NULL AUTO_INCREMENT
