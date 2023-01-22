@@ -4,6 +4,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -11,24 +16,31 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
-public class User implements UserDetails {
+public class User implements UserDetails, Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "firstname", nullable = false)
+    @Column(name = "firstname")
+    @NotEmpty(message = "Firstname should not be empty")
     private String firstname;
-    @Column(name = "lastname", nullable = false)
+    @Column(name = "lastname")
+    @NotEmpty(message = "Lastname should not be empty")
     private String lastname;
 
-    @Column(name = "age", nullable = false)
+    @Column(name = "age")
+    @Min(value = 0, message = "should be greater then 0")
     private Integer age;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email", unique = true)
+    @NotEmpty(message = "email should not be empty")
+    @Email
+    @Size(min = 4, max = 30 , message = "email should be between 4 and 30 character")
     private String email;
 
     @Column(name = "password", nullable = false)
+    @NotEmpty(message = "password should not be empty")
     private String password;
     @ManyToMany(cascade = {CascadeType.PERSIST},fetch = FetchType.EAGER)
     @JoinTable (

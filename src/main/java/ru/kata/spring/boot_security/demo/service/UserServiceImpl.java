@@ -3,72 +3,73 @@ package ru.kata.spring.boot_security.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.kata.spring.boot_security.demo.dao.RoleDao;
-import ru.kata.spring.boot_security.demo.dao.UserDao;
-import ru.kata.spring.boot_security.demo.model.*;
+import ru.kata.spring.boot_security.demo.model.User;
+import ru.kata.spring.boot_security.demo.repository.RoleRepository;
+import ru.kata.spring.boot_security.demo.repository.UserRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class UserServiceImpl implements UserService{
 
-    private final UserDao userDao;
-    private final RoleDao roleDao;
+    private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserServiceImpl(UserDao userDao, RoleDao roleDao, BCryptPasswordEncoder passwordEncoder) {
-        this.userDao = userDao;
-        this.roleDao = roleDao;
+    public UserServiceImpl(RoleRepository roleRepository, UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+        this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
+
     @Override
     public List<User> getUsers() {
-        return userDao.listUsers();
+        return userRepository.findAll();
     }
 
     @Override
     public void addUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRoles(user.getRoles().stream().map(role -> roleDao.getRoleByName(role.getName())).collect(Collectors.toSet()));
-        userDao.add(user);
+        user.setRoles(user.getRoles().stream().map(role -> roleRepository.findRoleByName(role.getName())).collect(Collectors.toSet()));
+        userRepository.save(user);
 
     }
 
     @Override
     public User getUserById(Long id) {
-        return userDao.getUserById(id);
+        return userRepository.findById(id).get();
     }
 
     @Override
     public void changeUser(User user) {
-        if(!user.getPassword().equals(userDao.getUserById(user.getId()).getPassword())) {
+        if(!user.getPassword().equals(userRepository.getById(user.getId()).getPassword())) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
-        user.setRoles(user.getRoles().stream().map(role -> roleDao.getRoleByName(role.getName())).collect(Collectors.toSet()));
-        userDao.changeUser(user);
+        user.setRoles(user.getRoles().stream().map(role -> roleRepository.findRoleByName(role.getName())).collect(Collectors.toSet()));
+        userRepository.save(user);
     }
 
     @Override
     public void deleteUser(Long id) {
-        userDao.deleteUser(id);
+        userRepository.deleteById(id);
     }
 
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userDao.getUserByEmail(username);
+        Optional<UserDetails> user = userRepository.findByEmail(username);
 
-        if (user == null) {
+        if (user.isEmpty()) {
             throw new UsernameNotFoundException("User not found");
         }
-        return (UserDetails) user;
+        return user.get();
     }
 }
