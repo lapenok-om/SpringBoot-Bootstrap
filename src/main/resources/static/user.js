@@ -22,3 +22,4 @@ function aboutMe() {
         }).catch(err => console.log(err));
 }
 
+aboutMe();
